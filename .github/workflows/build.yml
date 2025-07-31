@@ -9,40 +9,50 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+    - name: Checkout Code
+      uses: actions/checkout@v3
+
     - name: Install dependencies
       run: |
-        sudo apt update
-        sudo apt install -y php cmake g++ make git \
-            libssl-dev zlib1g-dev libsqlite3-dev \
-            libboost-system-dev libboost-filesystem-dev gperf
+        sudo apt-get update
+        sudo apt-get install -y php cmake g++ make git \
+          libssl-dev zlib1g-dev
 
     - name: Clone TDLib
-      run: |
-        git clone https://github.com/tdlib/td.git
+      run: git clone https://github.com/tdlib/td.git
 
-    - name: Prepare for low-memory build
+    - name: Configure TDLib Build
       run: |
         cd td
         mkdir build
         cd build
-        cmake -DCMAKE_BUILD_TYPE=Release ..
+        # مسیر نصب را مشخص می‌کنیم
+        cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX:PATH=../install ..
+
+    - name: Prepare for low-memory build (Optional)
+      # این مرحله برای بیلد در محیط‌های با حافظه کم است
+      run: |
+        cd td/build
         cmake --build . --target prepare_cross_compiling
         cd ..
         php SplitSource.php
 
-    - name: Build TDLib
+    - name: Build TDLib (tdjson and tdjson_static)
       run: |
         cd td/build
-        cmake --build . --target tdjson
-        cmake --build . --target tdjson_static
+        # با آپشن -j از چند هسته برای سرعت بیشتر استفاده می‌کنیم
+        cmake --build . --target tdjson -- -j$(nproc)
+        cmake --build . --target tdjson_static -- -j$(nproc)
+
+    - name: Install TDLib files
+      run: |
+        cd td/build
+        # تمام فایل‌های لازم را در پوشه install کپی می‌کند
+        cmake --install .
 
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: tdlib
-        path: |
-           td/build/libtdjson.so
-            td/build/libtdjson_static.a
-            td/build/td/tdjson/tdjson_export.h
-            td/tdjson/tdjson.h
-            td/telegram/td_api.hpp
+        name: tdlib-build
+        # کل پوشه install را به عنوان آرتیفکت آپلود می‌کنیم
+        path: td/install/
