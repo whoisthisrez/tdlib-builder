@@ -40,7 +40,6 @@ jobs:
     - name: Build TDLib (tdjson and tdjson_static)
       run: |
         cd td/build
-        # با آپشن -j از چند هسته برای سرعت بیشتر استفاده می‌کنیم
         cmake --build . --target tdjson -- -j$(nproc)
         cmake --build . --target tdjson_static -- -j$(nproc)
 
