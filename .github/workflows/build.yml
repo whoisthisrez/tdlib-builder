@@ -41,7 +41,8 @@ jobs:
       with:
         name: tdlib
         path: |
-          td/build/libtdjson.so
-          td/build/libtdjson_static.a
-          td/tdjson/tdjson.h
-          td/telegram/td_api.hpp
+           td/build/libtdjson.so
+            td/build/libtdjson_static.a
+            td/build/td/tdjson/tdjson_export.h
+            td/tdjson/tdjson.h
+            td/telegram/td_api.hpp
